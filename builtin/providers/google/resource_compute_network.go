@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"google.golang.org/api/compute/v1"
+	computeBeta "google.golang.org/api/compute/v0.beta"
 	"google.golang.org/api/googleapi"
 )
 
@@ -22,9 +22,16 @@ func resourceComputeNetwork() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"mode": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "legacy",
+				ForceNew: true,
+			},
+
 			"ipv4_range": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -37,6 +44,12 @@ func resourceComputeNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"subnetworks": &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -45,12 +58,28 @@ func resourceComputeNetworkCreate(d *schema.ResourceData, meta interface{}) erro
 	config := meta.(*Config)
 
 	// Build the network parameter
-	network := &compute.Network{
-		Name:      d.Get("name").(string),
-		IPv4Range: d.Get("ipv4_range").(string),
+	network := &computeBeta.Network{
+		Name: d.Get("name").(string),
 	}
+
+	if v, ok := d.GetOk("mode"); ok {
+		mode := v.(string)
+		if mode == "custom" {
+			network.AutoCreateSubnetworks = false
+			network.ForceSendFields = []string{"AutoCreateSubnetworks"}
+		} else if mode == "auto" {
+			network.AutoCreateSubnetworks = true
+		} else if mode != "legacy" {
+			return fmt.Errorf("Mode must be \"custom\", \"auto\", or \"legacy\" (default)")
+		}
+	}
+
+	if v, ok := d.GetOk("ipv4_range"); ok {
+		network.IPv4Range = v.(string)
+	}
+
 	log.Printf("[DEBUG] Network insert request: %#v", network)
-	op, err := config.clientCompute.Networks.Insert(
+	op, err := config.clientComputeBeta.Networks.Insert(
 		config.Project, network).Do()
 	if err != nil {
 		return fmt.Errorf("Error creating network: %s", err)
@@ -59,7 +88,7 @@ func resourceComputeNetworkCreate(d *schema.ResourceData, meta interface{}) erro
 	// It probably maybe worked, so store the ID now
 	d.SetId(network.Name)
 
-	err = computeOperationWaitGlobal(config, op, "Creating Network")
+	err = computeBetaOperationWaitGlobal(config, op, "Creating Network")
 	if err != nil {
 		return err
 	}
@@ -70,7 +99,7 @@ func resourceComputeNetworkCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceComputeNetworkRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	network, err := config.clientCompute.Networks.Get(
+	network, err := config.clientComputeBeta.Networks.Get(
 		config.Project, d.Id()).Do()
 	if err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 404 {
@@ -87,6 +116,14 @@ func resourceComputeNetworkRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("gateway_ipv4", network.GatewayIPv4)
 	d.Set("self_link", network.SelfLink)
 
+	subnetworks := make([]interface{}, len(network.Subnetworks))
+
+	for i, v := range network.Subnetworks {
+		subnetworks[i] = v
+	}
+
+	d.Set("subnetworks", subnetworks)
+
 	return nil
 }
 
@@ -94,13 +131,13 @@ func resourceComputeNetworkDelete(d *schema.ResourceData, meta interface{}) erro
 	config := meta.(*Config)
 
 	// Delete the network
-	op, err := config.clientCompute.Networks.Delete(
+	op, err := config.clientComputeBeta.Networks.Delete(
 		config.Project, d.Id()).Do()
 	if err != nil {
 		return fmt.Errorf("Error deleting network: %s", err)
 	}
 
-	err = computeOperationWaitGlobal(config, op, "Deleting Network")
+	err = computeBetaOperationWaitGlobal(config, op, "Deleting Network")
 	if err != nil {
 		return err
 	}
