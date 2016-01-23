@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 
-	"google.golang.org/api/compute/v1"
+	computeBeta "google.golang.org/api/compute/v0.beta"
 	"google.golang.org/api/googleapi"
 )
 
@@ -55,9 +55,7 @@ func resourceComputeVpnGatewayCreate(d *schema.ResourceData, meta interface{}) e
 	region := getOptionalRegion(d, config)
 	project := config.Project
 
-	vpnGatewaysService := compute.NewTargetVpnGatewaysService(config.clientCompute)
-
-	vpnGateway := &compute.TargetVpnGateway{
+	vpnGateway := &computeBeta.TargetVpnGateway{
 		Name:    name,
 		Network: network,
 	}
@@ -66,12 +64,12 @@ func resourceComputeVpnGatewayCreate(d *schema.ResourceData, meta interface{}) e
 		vpnGateway.Description = v.(string)
 	}
 
-	op, err := vpnGatewaysService.Insert(project, region, vpnGateway).Do()
+	op, err := config.clientComputeBeta.TargetVpnGateways.Insert(project, region, vpnGateway).Do()
 	if err != nil {
 		return fmt.Errorf("Error Inserting VPN Gateway %s into network %s: %s", name, network, err)
 	}
 
-	err = computeOperationWaitRegion(config, op, region, "Inserting VPN Gateway")
+	err = computeBetaOperationWaitRegion(config, op, region, "Inserting VPN Gateway")
 	if err != nil {
 		return fmt.Errorf("Error Waiting to Insert VPN Gateway %s into network %s: %s", name, network, err)
 	}
@@ -83,15 +81,14 @@ func resourceComputeVpnGatewayRead(d *schema.ResourceData, meta interface{}) err
 	config := meta.(*Config)
 
 	name := d.Get("name").(string)
-	region := d.Get("region").(string)
+	region := getOptionalRegion(d, config)
 	project := config.Project
 
-	vpnGatewaysService := compute.NewTargetVpnGatewaysService(config.clientCompute)
-	vpnGateway, err := vpnGatewaysService.Get(project, region, name).Do()
+	vpnGateway, err := config.clientComputeBeta.TargetVpnGateways.Get(project, region, name).Do()
 
 	if err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == 404 {
-			log.Printf("[WARN] Removing VPN Gateway %q because it's gone", d.Get("name").(string))
+			log.Printf("[WARN] Removing VPN Gateway %q because it's gone, %s", d.Get("name").(string), err)
 			// The resource doesn't exist anymore
 			d.SetId("")
 
@@ -101,8 +98,8 @@ func resourceComputeVpnGatewayRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error Reading VPN Gateway %s: %s", name, err)
 	}
 
-	d.Set("self_link", vpnGateway.SelfLink)
 	d.SetId(name)
+	d.Set("self_link", vpnGateway.SelfLink)
 
 	return nil
 }
@@ -114,14 +111,14 @@ func resourceComputeVpnGatewayDelete(d *schema.ResourceData, meta interface{}) e
 	region := d.Get("region").(string)
 	project := config.Project
 
-	vpnGatewaysService := compute.NewTargetVpnGatewaysService(config.clientCompute)
+	vpnGatewaysService := computeBeta.NewTargetVpnGatewaysService(config.clientComputeBeta)
 
 	op, err := vpnGatewaysService.Delete(project, region, name).Do()
 	if err != nil {
 		return fmt.Errorf("Error Reading VPN Gateway %s: %s", name, err)
 	}
 
-	err = computeOperationWaitRegion(config, op, region, "Deleting VPN Gateway")
+	err = computeBetaOperationWaitRegion(config, op, region, "Deleting VPN Gateway")
 	if err != nil {
 		return fmt.Errorf("Error Waiting to Delete VPN Gateway %s: %s", name, err)
 	}
