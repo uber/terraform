@@ -43,6 +43,7 @@ IMPROVEMENTS:
   * provider/aws: Add support for updating ELB availability zones and subnets [GH-4597]
   * provider/aws: Enable specifying aws s3 redirect protocol [GH-4098]
   * provider/aws: Added support for `encrypted` on `ebs_block_devices` in Launch Configurations [GH-4481]
+  * provider/aws: Retry Listener Creation for ELBs [GH-4825]
   * provider/aws: Add support for creating Managed Microsoft Active Directory 
     and Directory Connectors [GH-4388]
   * provider/aws: Mark some `aws_db_instance` fields as optional [GH-3138]
@@ -71,6 +72,7 @@ BUG FIXES:
   * provider/google: Clarify SQL Database Instance recent name restriction [GH-4577]
   * provider/google: Split Instance network interface into two fields [GH-4265]
   * provider/aws: Error with empty list item on security group [GH-4140]
+  * provider/aws: Fix issue with detecting drift in AWS Security Groups rules [GH-4779]
   * provider/aws: Trap Instance error from mismatched SG IDs and Names [GH-4240]
   * provider/aws: EBS optimised to force new resource in AWS Instance [GH-4627]
   * provider/aws: Wait for NACL rule to be visible [GH-4734]
