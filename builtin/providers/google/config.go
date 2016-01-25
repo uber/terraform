@@ -13,6 +13,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
+	computeBeta "google.golang.org/api/compute/v0.beta"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/dns/v1"
@@ -28,12 +29,13 @@ type Config struct {
 	Project     string
 	Region      string
 
-	clientCompute   *compute.Service
-	clientContainer *container.Service
-	clientDns       *dns.Service
-	clientStorage   *storage.Service
-	clientSqlAdmin  *sqladmin.Service
-	clientPubsub    *pubsub.Service
+	clientCompute     *compute.Service
+	clientComputeBeta *computeBeta.Service
+	clientContainer   *container.Service
+	clientDns         *dns.Service
+	clientStorage     *storage.Service
+	clientSqlAdmin    *sqladmin.Service
+	clientPubsub      *pubsub.Service
 }
 
 func (c *Config) loadAndValidate() error {
@@ -97,6 +99,13 @@ func (c *Config) loadAndValidate() error {
 
 	log.Printf("[INFO] Instantiating GCE client...")
 	c.clientCompute, err = compute.New(client)
+	if err != nil {
+		return err
+	}
+	c.clientCompute.UserAgent = userAgent
+
+	log.Printf("[INFO] Instantiating GCE beta client...")
+	c.clientComputeBeta, err = computeBeta.New(client)
 	if err != nil {
 		return err
 	}
