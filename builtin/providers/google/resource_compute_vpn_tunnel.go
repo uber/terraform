@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/schema"
 
-	"google.golang.org/api/compute/v1"
+	computeAlpha "google.golang.org/api/compute/v0.alpha"
 	"google.golang.org/api/googleapi"
 )
 
@@ -59,6 +59,17 @@ func resourceComputeVpnTunnel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"local_traffic_selector": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"router": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"self_link": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,9 +93,9 @@ func resourceComputeVpnTunnelCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Only IKE version 1 or 2 supported, not %d", ikeVersion)
 	}
 
-	vpnTunnelsService := compute.NewVpnTunnelsService(config.clientCompute)
+	vpnTunnelsService := computeAlpha.NewVpnTunnelsService(config.clientComputeAlpha)
 
-	vpnTunnel := &compute.VpnTunnel{
+	vpnTunnel := &computeAlpha.VpnTunnel{
 		Name:             name,
 		PeerIp:           peerIp,
 		SharedSecret:     sharedSecret,
@@ -96,12 +107,24 @@ func resourceComputeVpnTunnelCreate(d *schema.ResourceData, meta interface{}) er
 		vpnTunnel.Description = v.(string)
 	}
 
+	if v, ok := d.GetOk("router"); ok {
+		vpnTunnel.Router = v.(string)
+	}
+
+	if v, ok := d.GetOk("local_traffic_selector"); ok {
+		_selector := v.([]interface{})
+		vpnTunnel.LocalTrafficSelector = make([]string, len(_selector))
+		for i, v := range _selector {
+			vpnTunnel.LocalTrafficSelector[i] = v.(string)
+		}
+	}
+
 	op, err := vpnTunnelsService.Insert(project, region, vpnTunnel).Do()
 	if err != nil {
 		return fmt.Errorf("Error Inserting VPN Tunnel %s : %s", name, err)
 	}
 
-	err = computeOperationWaitRegion(config, op, region, "Inserting VPN Tunnel")
+	err = computeAlphaOperationWaitRegion(config, op, region, "Inserting VPN Tunnel")
 	if err != nil {
 		return fmt.Errorf("Error Waiting to Insert VPN Tunnel %s: %s", name, err)
 	}
@@ -116,7 +139,7 @@ func resourceComputeVpnTunnelRead(d *schema.ResourceData, meta interface{}) erro
 	region := d.Get("region").(string)
 	project := config.Project
 
-	vpnTunnelsService := compute.NewVpnTunnelsService(config.clientCompute)
+	vpnTunnelsService := computeAlpha.NewVpnTunnelsService(config.clientComputeAlpha)
 
 	vpnTunnel, err := vpnTunnelsService.Get(project, region, name).Do()
 	if err != nil {
@@ -146,14 +169,14 @@ func resourceComputeVpnTunnelDelete(d *schema.ResourceData, meta interface{}) er
 	region := d.Get("region").(string)
 	project := config.Project
 
-	vpnTunnelsService := compute.NewVpnTunnelsService(config.clientCompute)
+	vpnTunnelsService := computeAlpha.NewVpnTunnelsService(config.clientComputeAlpha)
 
 	op, err := vpnTunnelsService.Delete(project, region, name).Do()
 	if err != nil {
 		return fmt.Errorf("Error Reading VPN Tunnel %s: %s", name, err)
 	}
 
-	err = computeOperationWaitRegion(config, op, region, "Deleting VPN Tunnel")
+	err = computeAlphaOperationWaitRegion(config, op, region, "Deleting VPN Tunnel")
 	if err != nil {
 		return fmt.Errorf("Error Waiting to Delete VPN Tunnel %s: %s", name, err)
 	}
