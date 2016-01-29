@@ -1,28 +1,57 @@
-## 0.6.10 (Unreleased)
+## 0.6.11 (Unreleased)
 
-BACKWARDS INCOMPATIBILITIES:
+BACKWARDS INCOMPATIBILITIES / NOTES:
 
- * The `-module-depth` flag available on `plan`, `apply`, `show`, and `graph` now defaults to `-1`, causing
-   resources within modules to be expanded in command output. This is only a cosmetic change; it does not affect
-   any behavior.
- * This release includes a bugfix for `$${}` interpolation escaping. These strings are now properly converted to `${}`
-   during interpolation. This may cause diffs on existing configurations in certain cases.
+  * The `max_size`, `min_size` and `desired_capacity` attributes on `aws_autoscaling_schedule` resources now default to 0
 
 FEATURES:
 
+  * **New provider: `powerdns` - PowerDNS REST API** [GH-4885]
+
+IMPROVEMENTS:
+
+  * provider/template: Remove unnecessary mime-type validation from `template_cloudinit_config` resources [GH-4873]
+  * provider/template: Correct spelling of "Boundary" in the part separator of rendered `template_cloudinit_config` resources [GH-4873]
+ 
+BUG FIXES:
+
+  * provider/aws: `aws_autoscale_schedule` 0 values [GH-4693]
+  * provider/aws: Fix regression with VPCs and ClassicLink for regions that do not support it [GH-4879]
+  * provider/openstack: Changing the port resource to mark the ip_address as optional [GH-4850]
+
+
+## 0.6.10 (January 27, 2016)
+
+BACKWARDS INCOMPATIBILITIES / NOTES:
+
+  * The `-module-depth` flag available on `plan`, `apply`, `show`, and `graph` now defaults to `-1`, causing
+    resources within modules to be expanded in command output. This is only a cosmetic change; it does not affect
+    any behavior.
+  * This release includes a bugfix for `$${}` interpolation escaping. These strings are now properly converted to `${}`
+    during interpolation. This may cause diffs on existing configurations in certain cases.
+  * Users of `consul_keys` should note that the `value` sub-attribute of `key` will no longer be updated with the remote value of the key. It should be only used to _set_ a key in Consul K/V. To reference key values, use the `var` attribute.
+  * The 0.6.9 release contained a regression in `aws_autoscaling_group` capacity waiting behavior for configs where `min_elb_capacity != desired_capacity` or `min_size != desired_capacity`. This release remedies that regression by un-deprecating `min_elb_capacity` and restoring the prior behavior.
+  * Users of `aws_security_group` may notice new diffs in initial plans with 0.6.10 due to a bugfix that fixes drift detection on nested security group rules. These new diffs should reflect the actual state of the resources, which Terraform previously was unable to see.
+
+
+FEATURES:
+
+  * **New resource: `aws_lambda_alias`** [GH-4664]
+  * **New resource: `aws_redshift_cluster`** [GH-3862]
+  * **New resource: `aws_redshift_parameter_group`** [GH-3862]
+  * **New resource: `aws_redshift_security_group`** [GH-3862]
+  * **New resource: `aws_redshift_subnet_group`** [GH-3862]
   * **New resource: `azurerm_cdn_endpoint`** [GH-4759]
   * **New resource: `azurerm_cdn_profile`** [GH-4740]
-  * **New resource: `azurerm_network_security_rule`** [GH-4586]
-  * **New resource: `azurerm_subnet`** [GH-4595]
   * **New resource: `azurerm_network_interface`** [GH-4598]
+  * **New resource: `azurerm_network_security_rule`** [GH-4586]
   * **New resource: `azurerm_route_table`** [GH-4602]
   * **New resource: `azurerm_route`** [GH-4604]
   * **New resource: `azurerm_storage_account`** [GH-4698]
-  * **New resource: `aws_lambda_alias`** [GH-4664]
-  * **New resource: `aws_redshift_cluster`** [GH-3862]
-  * **New resource: `aws_redshift_security_group`** [GH-3862]
-  * **New resource: `aws_redshift_parameter_group`** [GH-3862]
-  * **New resource: `aws_redshift_subnet_group`** [GH-3862]
+  * **New resource: `azurerm_storage_blob`** [GH-4862]
+  * **New resource: `azurerm_storage_container`** [GH-4862]
+  * **New resource: `azurerm_storage_queue`** [GH-4862]
+  * **New resource: `azurerm_subnet`** [GH-4595]
   * **New resource: `docker_network`** [GH-4483]
   * **New resource: `docker_volume`** [GH-4483]
   * **New resource: `google_sql_user`** [GH-4669]
@@ -56,6 +85,7 @@ IMPROVEMENTS:
   * provider/openstack: Add "personality" support to instance resource [GH-4623]
   * provider/packet: Handle external state changes for Packet resources gracefully [GH-4676]
   * provider/tls: `tls_private_key` now exports attributes with public key in both PEM and OpenSSH format [GH-4606]
+  * provider/vdc: Add `allow_unverified_ssl` for connections to vCloud API [GH-4811]
   * state/remote: Allow KMS Key Encryption to be used with S3 backend [GH-2903]
 
 BUG FIXES:
@@ -66,6 +96,7 @@ BUG FIXES:
   * core: Write planfile even on empty plans [GH-4766]
   * core: Add validation error when output is missing value field [GH-4762]
   * core: Fix improper handling of orphan resources when targeting [GH-4574]
+  * core: Properly handle references to computed set attributes [GH-4840]
   * config: Detect a specific JSON edge case and show a helpful workaround [GH-4746]
   * provider/openstack: Ensure valid Security Group Rule attribute combination [GH-4466]
   * provider/openstack: Don't put fixed_ip in port creation request if not defined [GH-4617]
@@ -77,9 +108,12 @@ BUG FIXES:
   * provider/aws: EBS optimised to force new resource in AWS Instance [GH-4627]
   * provider/aws: Wait for NACL rule to be visible [GH-4734]
   * provider/aws: `default_result` on `aws_autoscaling_lifecycle_hook` resources is now computed [GH-4695]
+  * provider/aws: fix ASG capacity waiting regression by un-deprecating `min_elb_capacity` [GH-4864]
+  * provider/consul: fix several bugs surrounding update behavior [GH-4787]
   * provider/mailgun: Handle the fact that the domain destroy API is eventually consistent [GH-4777]
   * provider/template: Fix race causing sporadic crashes in template_file with count > 1 [GH-4694]
   * provider/template: Add support for updating `template_cloudinit_config` resources [GH-4757]
+  * provisioner/chef: Add ENV['no_proxy'] to chef provisioner if no_proxy is detected [GH-4661]
 
 ## 0.6.9 (January 8, 2016)
 
@@ -167,7 +201,6 @@ BUG FIXES:
   * provider/aws: Fix template_url/template_body conflict [GH-4540]
   * provider/aws: Fix bug w/ changing ECS svc/ELB association [GH-4366]
   * provider/aws: Fix RDS unexpected state config [GH-4490]
-  * provider/azure: Update for [breaking change to upstream client library](https://github.com/Azure/azure-sdk-for-go/commit/68d50cb53a73edfeb7f17f5e86cdc8eb359a9528). [GH-4300]
   * provider/digitalocean: Fix issue where a floating IP attached to a missing droplet causes a panic [GH-4214]
   * provider/google: Fix project metadata sshKeys from showing up and causing unnecessary diffs [GH-4512]
   * provider/heroku: Retry drain create until log channel is assigned [GH-4823]
