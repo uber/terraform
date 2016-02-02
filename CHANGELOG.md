@@ -1,4 +1,6 @@
-## 0.6.11 (Unreleased)
+## 0.6.12 (Unreleased)
+
+## 0.6.11 (February 1, 2016)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
 
@@ -7,17 +9,28 @@ BACKWARDS INCOMPATIBILITIES / NOTES:
 FEATURES:
 
   * **New provider: `powerdns` - PowerDNS REST API** [GH-4885]
+  * **New builtin function:** `trimspace` for trimming whitespaces [GH-4910]
+  * **New builtin function:** `base64sha256` for base64 encoding raw sha256 sum of a given string [GH-4899]
+  * **New resource:** `openstack_lb_member_v1` [GH-4359]
 
 IMPROVEMENTS:
 
   * provider/template: Remove unnecessary mime-type validation from `template_cloudinit_config` resources [GH-4873]
   * provider/template: Correct spelling of "Boundary" in the part separator of rendered `template_cloudinit_config` resources [GH-4873]
+  * provider/aws: Provide a better message if no AWS creds are found [GH-4869]
+  * provider/openstack: Ability to specify per-network Floating IPs [GH-4812] 
  
 BUG FIXES:
 
   * provider/aws: `aws_autoscale_schedule` 0 values [GH-4693]
   * provider/aws: Fix regression with VPCs and ClassicLink for regions that do not support it [GH-4879]
+  * provider/aws: Change VPC ClassicLink to be computed [GH-4933]
+  * provider/aws: Fix SNS Topic Refresh to ensure deleted topics are removed from state [GH-4891]
+  * provider/aws: Refactor Route53 record to fix regression in deleting records created in previous versions of Terraform [GH-4892]
+  * provider/azurerm: Fix panic if no creds supplied [GH-4902]
   * provider/openstack: Changing the port resource to mark the ip_address as optional [GH-4850]
+  * provider/docker: Catch potential custom network errors in docker [GH-4918]
+  
 
 
 ## 0.6.10 (January 27, 2016)
