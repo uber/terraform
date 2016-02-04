@@ -63,7 +63,7 @@ func (w *ComputeAlphaOperationWaiter) RefreshFunc() resource.StateRefreshFunc {
 func (w *ComputeAlphaOperationWaiter) Conf() *resource.StateChangeConf {
 	return &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING"},
-		Target:  "DONE",
+		Target:  []string{"DONE"},
 		Refresh: w.RefreshFunc(),
 	}
 }
