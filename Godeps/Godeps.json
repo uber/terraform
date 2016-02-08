@@ -499,7 +499,7 @@
 		},
 		{
 			"ImportPath": "github.com/hashicorp/hil",
-			"Rev": "075475a7408f16568f5cf79656dbcb053ac6196b"
+			"Rev": "42518c6f01625b5e6948a6a0e6a0792df126c548"
 		},
 		{
 			"ImportPath": "github.com/hashicorp/logutils",
@@ -526,15 +526,15 @@
 		},
 		{
 			"ImportPath": "github.com/jen20/riviera/azure",
-			"Rev": "478cbee6e83468ab998195f485cf8f62069a8024"
+			"Rev": "5bae671a2903c37b4d580f24d9ab74ada633813f"
 		},
 		{
 			"ImportPath": "github.com/jen20/riviera/dns",
-			"Rev": "478cbee6e83468ab998195f485cf8f62069a8024"
+			"Rev": "5bae671a2903c37b4d580f24d9ab74ada633813f"
 		},
 		{
 			"ImportPath": "github.com/jen20/riviera/sql",
-			"Rev": "478cbee6e83468ab998195f485cf8f62069a8024"
+			"Rev": "5bae671a2903c37b4d580f24d9ab74ada633813f"
 		},
 		{
 			"ImportPath": "github.com/jmespath/go-jmespath",

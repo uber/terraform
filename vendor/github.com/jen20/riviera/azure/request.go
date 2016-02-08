@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -16,11 +17,11 @@ import (
 )
 
 type Request struct {
-	URI      *string             `json:"-"`
-	location *string             `json:"location,omitempty"`
-	tags     *map[string]*string `json:"tags,omitempty"`
-	etag     *string             `json:"etag,omitempty"`
-	Command  ApiCall             `json:"properties,omitempty"`
+	URI      *string
+	location *string
+	tags     *map[string]*string
+	etag     *string
+	Command  APICall
 
 	client *Client
 }
@@ -106,48 +107,70 @@ func (request *Request) pollForAsynchronousResponse(acceptedResponse *http.Respo
 	}
 }
 
-func (r *Request) Execute() (*Response, error) {
-	apiInfo := r.Command.ApiInfo()
+func defaultARMRequestStruct(request *Request, properties interface{}) interface{} {
+	bodyStruct := struct {
+		Location   *string             `json:"location,omitempty"`
+		Tags       *map[string]*string `json:"tags,omitempty"`
+		Properties interface{}         `json:"properties"`
+	}{
+		Properties: properties,
+	}
+
+	if location, hasLocation := readLocation(request.Command); hasLocation {
+		bodyStruct.Location = &location
+	}
+	if tags, hasTags := readTags(request.Command); hasTags {
+		if len(tags) > 0 {
+			bodyStruct.Tags = &tags
+		}
+	}
+
+	return bodyStruct
+}
+
+func defaultARMRequestSerialize(body interface{}) (io.ReadSeeker, error) {
+	jsonEncodedRequest, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(jsonEncodedRequest), nil
+}
+
+func (request *Request) Execute() (*Response, error) {
+	apiInfo := request.Command.APIInfo()
 
 	var urlString string
 
 	// Base URL should already be validated by now so Parse is safe without error handling
-	urlObj, _ := url.Parse(r.client.BaseUrl)
+	urlObj, _ := url.Parse(request.client.BaseURL)
 
-	// Determine whether to use the URLPathFunc or the URI explictly set in the request
-	if r.URI == nil {
-		urlObj.Path = fmt.Sprintf("/subscriptions/%s/%s", r.client.subscriptionID, strings.TrimPrefix(apiInfo.URLPathFunc(), "/"))
+	// Determine whether to use the URLPathFunc or the URI explicitly set in the request
+	if request.URI == nil {
+		urlObj.Path = fmt.Sprintf("/subscriptions/%s/%s", request.client.subscriptionID, strings.TrimPrefix(apiInfo.URLPathFunc(), "/"))
 		urlString = urlObj.String()
 	} else {
-		urlObj.Path = *r.URI
+		urlObj.Path = *request.URI
 		urlString = urlObj.String()
 	}
 
 	// Encode the request body if necessary
-	body := bytes.NewReader([]byte{})
+	var body io.ReadSeeker
 	if apiInfo.HasBody() {
-		bodyStruct := struct {
-			Location   *string             `json:"location,omitempty"`
-			Tags       *map[string]*string `json:"tags,omitempty"`
-			Properties interface{}         `json:"properties"`
-		}{
-			Properties: r.Command,
+		var bodyStruct interface{}
+		if apiInfo.RequestPropertiesFunc != nil {
+			bodyStruct = defaultARMRequestStruct(request, apiInfo.RequestPropertiesFunc())
+		} else {
+			bodyStruct = defaultARMRequestStruct(request, request.Command)
 		}
-
-		if location, hasLocation := readLocation(r.Command); hasLocation {
-			bodyStruct.Location = &location
-		}
-		if tags, hasTags := readTags(r.Command); hasTags {
-			if len(tags) > 0 {
-				bodyStruct.Tags = &tags
-			}
-		}
-
-		jsonEncodedRequest, err := json.Marshal(bodyStruct)
+		serialized, err := defaultARMRequestSerialize(bodyStruct)
 		if err != nil {
 			return nil, err
 		}
-		body = bytes.NewReader(jsonEncodedRequest)
+
+		body = serialized
+	} else {
+
+		body = bytes.NewReader([]byte{})
 	}
 
 	// Create an HTTP request
@@ -157,25 +180,25 @@ func (r *Request) Execute() (*Response, error) {
 	}
 
 	query := req.URL.Query()
-	query.Set("api-version", apiInfo.ApiVersion)
+	query.Set("api-version", apiInfo.APIVersion)
 	req.URL.RawQuery = query.Encode()
 
 	if apiInfo.HasBody() {
 		req.Header.Add("Content-Type", "application/json")
 	}
 
-	err = r.client.tokenRequester.addAuthorizationToRequest(req)
+	err = request.client.tokenRequester.addAuthorizationToRequest(req)
 	if err != nil {
 		return nil, err
 	}
 
-	httpResponse, err := r.client.httpClient.Do(req)
+	httpResponse, err := request.client.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// This is safe to use for every request: we check for it being http.StatusAccepted
-	httpResponse, err = r.pollForAsynchronousResponse(httpResponse)
+	httpResponse, err = request.pollForAsynchronousResponse(httpResponse)
 	if err != nil {
 		return nil, err
 	}

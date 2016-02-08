@@ -3,12 +3,29 @@
 FEATURES:
 
   * **New resource:** `azurerm_dns_zone` [GH-4979]
+  * **New resource:** `azurerm_dns_a_record` [GH-5013]
+  * **New resource:** `azurerm_dns_aaaa_record` [GH-5013]
+  * **New resource:** `azurerm_dns_cname_record` [GH-5013]
+  * **New resource:** `azurerm_dns_mx_record` [GH-5041]
+  * **New resource:** `azurerm_dns_ns_record` [GH-5041]
+  * **New resource:** `azurerm_dns_srv_record` [GH-5041]
+  * **New resource:** `azurerm_dns_txt_record` [GH-5041]
+  * **New resource:** `azurerm_sql_database` [GH-5003]
   * **New resource:** `azurerm_sql_server` [GH-4991]
+  * **New interpolation function:** `signum` [GH-4854]
+  * **New command:** `validate` to perform syntax validation [GH-3783]
+
+IMPROVEMENTS:
+
+  * provider/aws: Add `is_multi_region_trail` option to CloudTrail [GH-4939]
 
 BUG FIXES:
 
   * core: Fix bug where `ignore_changes` could produce "diffs didn't match during apply" errors [GH-4965]
+  * core: Improve handling of Provisioners in the graph, fixing "Provisioner already initialized" errors [GH-4877]
   * provider/openstack: Fix crash when `access_network` was not defined in instances [GH-4966]
+  * provider/aws: Fix DynamoDB Table Refresh to ensure deleted tables are removed from state [GH-4943]
+  * provider/cloudflare: `ttl` no longer shows a change on each plan on `cloudflare_record` resources [GH-5042]
 
 ## 0.6.11 (February 1, 2016)
 
