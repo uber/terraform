@@ -1,4 +1,6 @@
-## 0.6.12 (Unreleased)
+## 0.6.13 (Unreleased)
+
+## 0.6.12 (February 24, 2016)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
 
@@ -8,6 +10,7 @@ FEATURES:
 
   * **New command:** `validate` to perform syntax validation [GH-3783]
   * **New provider:** `datadog` [GH-5251]
+  * **New interpolation function:** `md5` [GH-5267]
   * **New interpolation function:** `signum` [GH-4854]
   * **New resource:** `aws_cloudwatch_event_rule` [GH-4986]
   * **New resource:** `aws_cloudwatch_event_target` [GH-4986]
@@ -29,6 +32,8 @@ FEATURES:
 IMPROVEMENTS:
 
   * core: Backend names are now down cased during `init` in the same manner as `remote config` [GH-5012]
+  * core: Upgrade resource name validation warning to an error as planned [GH-5272]
+  * core: output "diffs didn't match" error details [GH-5276]
   * provider/aws: Add `is_multi_region_trail` option to CloudTrail [GH-4939]
   * provider/aws: Add support for HTTP(S) endpoints that auto confirm SNS subscription [GH-4711]
   * provider/aws: Add support for Tags to CloudTrail [GH-5135]
@@ -43,6 +48,8 @@ IMPROVEMENTS:
   * provider/aws: `aws_lambda_function` resources now support VPC configuration [GH-5149]
   * provider/aws: Add support for Enhanced Monitoring to RDS Instances [GH-4945]
   * provider/aws: Improve vpc cidr_block err message [GH-5255]
+  * provider/aws: Implement Retention Period for `aws_kinesis_stream` [GH-5223]
+  * provider/aws: Enable `stream_arm` output for DynamoDB Table when streams are enabled [GH-5271]
   * provider/digitalocean: `digitalocean_record` resources now export a computed `fqdn` attribute [GH-5071]
   * provider/google: Add assigned IP Address to CloudSQL Instance `google_sql_database_instance` [GH-5245]
   * provider/openstack: Add support for Distributed Routers [GH-4878]
@@ -56,6 +63,7 @@ BUG FIXES:
   * core: Improve handling of Provisioners in the graph, fixing "Provisioner already initialized" errors [GH-4877]
   * core: Skip `create_before_destroy` processing during a `terraform destroy`, solving several issues preventing `destroy`
           from working properly with CBD resources [GH-5096]
+  * core: Error instead of panic on self var in wrong scope [GH-5273]
   * provider/aws: Fix Copy of Tags to DB Instance when created from Snapshot [GH-5197]
   * provider/aws: Fix DynamoDB Table Refresh to ensure deleted tables are removed from state [GH-4943]
   * provider/aws: Fix ElasticSearch `domain_name` validation [GH-4973]
@@ -64,6 +72,7 @@ BUG FIXES:
   * provider/aws: Fix reading auto scaling group load balancers [GH-5045]
   * provider/aws: Fix `aws_redshift_cluster` to allow `publicly_accessible` to be false [GH-5262]
   * provider/aws: Wait longer for internet gateways to detach [GH-5120]
+  * provider/aws: Fix issue reading auto scaling group termination policies [GH-5101]
   * provider/cloudflare: `ttl` no longer shows a change on each plan on `cloudflare_record` resources [GH-5042]
   * provider/docker: Fix the default docker_host value [GH-5088]
   * provider/google: Fix backend service max_utilization attribute [GH-5075]
