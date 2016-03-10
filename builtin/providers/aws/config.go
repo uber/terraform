@@ -35,12 +35,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -96,8 +98,10 @@ type AWSClient struct {
 	rdsconn              *rds.RDS
 	iamconn              *iam.IAM
 	kinesisconn          *kinesis.Kinesis
+	kmsconn              *kms.KMS
 	firehoseconn         *firehose.Firehose
 	elasticacheconn      *elasticache.ElastiCache
+	elasticbeanstalkconn *elasticbeanstalk.ElasticBeanstalk
 	lambdaconn           *lambda.Lambda
 	opsworksconn         *opsworks.OpsWorks
 	glacierconn          *glacier.Glacier
@@ -213,6 +217,9 @@ func (c *Config) Client() (interface{}, error) {
 		kinesisSess := session.New(&awsKinesisConfig)
 		client.kinesisconn = kinesis.New(kinesisSess)
 
+		log.Println("[INFO] Initializing Elastic Beanstalk Connection")
+		client.elasticbeanstalkconn = elasticbeanstalk.New(sess)
+
 		authErr := c.ValidateAccountId(client.iamconn)
 		if authErr != nil {
 			errs = append(errs, authErr)
@@ -289,6 +296,8 @@ func (c *Config) Client() (interface{}, error) {
 		log.Println("[INFO] Initializing Redshift SDK connection")
 		client.redshiftconn = redshift.New(sess)
 
+		log.Println("[INFO] Initializing KMS connection")
+		client.kmsconn = kms.New(sess)
 	}
 
 	if len(errs) > 0 {
