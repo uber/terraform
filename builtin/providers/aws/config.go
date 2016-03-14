@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform/terraform"
 
 	"crypto/tls"
 
@@ -18,6 +19,7 @@ import (
 	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -156,13 +158,12 @@ func (c *Config) Client() (interface{}, error) {
 			}
 		}
 
-		log.Println("[INFO] Initializing IAM Connection")
+		// Set up base session
 		sess := session.New(awsConfig)
+		sess.Handlers.Build.PushFrontNamed(addTerraformVersionToUserAgent)
 
-		awsIamConfig := *awsConfig
-		awsIamConfig.Endpoint = aws.String(c.IamEndpoint)
-
-		awsIamSess := session.New(&awsIamConfig)
+		log.Println("[INFO] Initializing IAM Connection")
+		awsIamSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.IamEndpoint)})
 		client.iamconn = iam.New(awsIamSess)
 
 		err = c.ValidateCredentials(client.iamconn)
@@ -175,27 +176,14 @@ func (c *Config) Client() (interface{}, error) {
 		// signature format v4 requires region to be us-east-1 for global
 		// endpoints:
 		// http://docs.aws.amazon.com/general/latest/gr/sigv4_changes.html
-		usEast1AwsConfig := &aws.Config{
-			Credentials: creds,
-			Region:      aws.String("us-east-1"),
-			MaxRetries:  aws.Int(c.MaxRetries),
-			HTTPClient:  cleanhttp.DefaultClient(),
-		}
-		usEast1Sess := session.New(usEast1AwsConfig)
-
-		awsDynamoDBConfig := *awsConfig
-		awsDynamoDBConfig.Endpoint = aws.String(c.DynamoDBEndpoint)
+		usEast1Sess := sess.Copy(&aws.Config{Region: aws.String("us-east-1")})
 
 		log.Println("[INFO] Initializing DynamoDB connection")
-		dynamoSess := session.New(&awsDynamoDBConfig)
+		dynamoSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.DynamoDBEndpoint)})
 		client.dynamodbconn = dynamodb.New(dynamoSess)
 
 		log.Println("[INFO] Initializing ELB connection")
-		awsElbConfig := *awsConfig
-		awsElbConfig.Endpoint = aws.String(c.ElbEndpoint)
-
-		awsElbSess := session.New(&awsElbConfig)
-
+		awsElbSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.ElbEndpoint)})
 		client.elbconn = elb.New(awsElbSess)
 
 		log.Println("[INFO] Initializing S3 connection")
@@ -210,11 +198,8 @@ func (c *Config) Client() (interface{}, error) {
 		log.Println("[INFO] Initializing RDS Connection")
 		client.rdsconn = rds.New(sess)
 
-		awsKinesisConfig := *awsConfig
-		awsKinesisConfig.Endpoint = aws.String(c.KinesisEndpoint)
-
 		log.Println("[INFO] Initializing Kinesis Connection")
-		kinesisSess := session.New(&awsKinesisConfig)
+		kinesisSess := sess.Copy(&aws.Config{Endpoint: aws.String(c.KinesisEndpoint)})
 		client.kinesisconn = kinesis.New(kinesisSess)
 
 		log.Println("[INFO] Initializing Elastic Beanstalk Connection")
@@ -233,10 +218,7 @@ func (c *Config) Client() (interface{}, error) {
 
 		log.Println("[INFO] Initializing EC2 Connection")
 
-		awsEc2Config := *awsConfig
-		awsEc2Config.Endpoint = aws.String(c.Ec2Endpoint)
-
-		awsEc2Sess := session.New(&awsEc2Config)
+		awsEc2Sess := sess.Copy(&aws.Config{Endpoint: aws.String(c.Ec2Endpoint)})
 		client.ec2conn = ec2.New(awsEc2Sess)
 
 		log.Println("[INFO] Initializing ECR Connection")
@@ -442,4 +424,12 @@ func getCreds(key, secret, token, profile, credsfile string) *awsCredentials.Cre
 		log.Printf("[DEBUG] EC2 Metadata service not found, not adding EC2 Role Credential Provider")
 	}
 	return awsCredentials.NewChainCredentials(providers)
+}
+
+// addTerraformVersionToUserAgent is a named handler that will add Terraform's
+// version information to requests made by the AWS SDK.
+var addTerraformVersionToUserAgent = request.NamedHandler{
+	Name: "terraform.TerraformVersionUserAgentHandler",
+	Fn: request.MakeAddToUserAgentHandler(
+		"terraform", terraform.Version, terraform.VersionPrerelease),
 }

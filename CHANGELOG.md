@@ -10,7 +10,8 @@ BACKWARDS INCOMPATIBILITIES / NOTES:
 
 FEATURES:
 
-  * **New interpolation function:** `uuid()`[GH-5575]
+  * **New command:** `terraform untaint` [GH-5527]
+  * **New interpolation function:** `uuid()` [GH-5575]
   * **New resource:** `aws_api_gateway_api_key` [GH-4295]
   * **New resource:** `aws_api_gateway_deployment` [GH-4295]
   * **New resource:** `aws_api_gateway_integration` [GH-4295]
@@ -43,15 +44,19 @@ IMPROVEMENTS:
   * provider/aws: Retry DB Creation on IAM propigation error [GH-5515]
   * provider/aws: Guard against Nil Reference in Redshift Endpoints [GH-5593]
   * provider/aws: Support KMS encryption of S3 objects [GH-5453]
+  * provider/aws: `aws_autoscaling_lifecycle_hook` now have `notification_target_arn` and `role_arn` as optional [GH-5616]
+  * provider/aws: send Terraform version in User-Agent [GH-5621]
   * provider/cloudflare: Change `cloudflare_record` type to ForceNew [GH-5353]
   * provider/consul: `consul_keys` now detects drift and supports deletion of individual `key` blocks [GH-5210]
   * provider/docker: Add support for `unless-stopped` to docker container `restart_policy` [GH-5337]
+  * provider/digitalocean: Guard against Nil reference in `digitalocean_droplet` [GH-5588]
   * provider/google: Validate VPN tunnel peer_ip at plan time [GH-5501]
   * provider/openstack: Add Support for Domain ID and Domain Name environment variables [GH-5355]
   * provider/openstack: Add support for instances to have multiple ephemeral disks. [GH-5131]
   * provider/openstack: Re-Add server.AccessIPv4 and server.AccessIPv6 [GH-5366]
   * provider/vsphere: Add support for disk init types [GH-4284]
   * provider/google: Mark `next_hop_network` as read-only on `google_compute_route` [GH-5564]
+  * provisioner/remote-exec: Clear out scripts after uploading [GH-5577]
   * state/remote/http: Change content type of PUT requests to the more appropriate `application/json` [GH-5499]
 
 
