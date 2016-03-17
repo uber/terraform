@@ -778,6 +778,14 @@ func TestInterpolateFuncElement(t *testing.T) {
 				false,
 			},
 
+			// Negative number should fail
+			{
+				fmt.Sprintf(`${element("%s", "-1")}`,
+					NewStringList([]string{"foo"}).String()),
+				nil,
+				true,
+			},
+
 			// Too many args
 			{
 				fmt.Sprintf(`${element("%s", "0", "2")}`,
@@ -943,28 +951,6 @@ func TestInterpolateFuncMd5(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestInterpolateFuncUUID(t *testing.T) {
-	results := make(map[string]bool)
-
-	for i := 0; i < 100; i++ {
-		ast, err := hil.Parse("${uuid()}")
-		if err != nil {
-			t.Fatalf("err: %s", err)
-		}
-
-		out, _, err := hil.Eval(ast, langEvalConfig(nil))
-		if err != nil {
-			t.Fatalf("err: %s", err)
-		}
-
-		if results[out.(string)] {
-			t.Fatalf("Got unexpected duplicate uuid: %s", out)
-		}
-
-		results[out.(string)] = true
-	}
 }
 
 type testFunctionConfig struct {
