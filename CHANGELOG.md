@@ -3,13 +3,31 @@
 FEATURES:
 
   * **New provider:** `github` - Manage GitHub Organization permissions with Terraform config [GH-5194]
+  * **New provider:** `influxdb` - Manage InfluxDB databases [GH-3478]
+  * **New provider:** `ultradns` - Manage UltraDNS records [GH-5716]
+  * **New provider:** `triton` - Manage Joyent Triton public cloud or on-premise installations [GH-5738]
   * **New resource:** `azurerm_virtual_machine` [GH-5514]
 
 IMPROVEMENTS:
 
+  * provider/aws: `aws_db_instance` now makes `identifier` optional and generates a unique ID when it is omitted [GH-5723]
+  * provider/aws: `aws_redshift_cluster` now allows`publicly_accessible` to be modified [GH-5721]
+
 BUG FIXES:
 
+  * core: Color output is now shown correctly when running Terraform on Windows [GH-5718]
+  * core: HEREDOCs can now be indented in line with configuration using `<<-` and hanging indent is removed [GH-5740]
+  * core: Invalid HCL syntax of nested object blocks no longer causes a crash [GH-5740]
+  * core: Local directory-based modules now use junctions instead of symbolic links on Windows [GH-5739]
+  * core: Modules sourced from a Mercurial repository now work correctly on Windows [GH-5739]
+  * provider/aws: Fix crash when an `aws_rds_cluster_instance` is removed outside of Terraform [GH-5717]
   * provider/aws: `aws_lambda_function` resources no longer error on refresh if deleted externally to Terraform [GH-5668]
+  * provider/aws: `aws_vpn_connection` resources deleted via the console on longer cause a crash [GH-5747]
+  * provider/digitalocean: `digitalocean_ssh_key` resources no longer cause a panic if there is no network connectivity [GH-5748]
+  * provider/google: Default description `google_dns_managed_zone` resources to "Managed By Terraform" [GH-5428]
+  * provider/google: Fix error message on invalid instance URL for `google_compute_instance_group` [GH-5715]
+  * provider/vsphere: provide `host` to provisioner connections [GH-5558]
+  * provisioner/remote-exec: Address race condition introduced with script cleanup step introduced in 0.6.13 [GH-5751]
 
 ## 0.6.13 (March 16, 2016)
 
