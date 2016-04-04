@@ -2,19 +2,42 @@
 
 FEATURES:
 
+ * **New interpolation function:** `jsonencode` [GH-5890]
+ * **New provider:** `fastly` [GH-5814]
  * **New resource:** `aws_iam_user_ssh_key` [GH-5774]
- * **New Provider:** `fastly` [GH-5814]
- 
+ * **New resource:** `triton_fabric` [GH-5920]
+ * **New resource:** `triton_vlan` [GH-5920]
+ * **New resource:** `cloudstack_static_nat` [GH-6004]
+ * New `terraform fmt` command to automatically normalize config file style [GH-4955]
+
 IMPROVEMENTS:
+
  * provider/aws: Change `aws_elb` access_logs to list type [GH-5065]
+ * provider/aws: `aws_codecommit_repository` set `default_branch` only if defined [GH-5904]
+ * provider/aws: Allow `aws_db_subnet_group` description to be updated [GH-5921]
+ * provider/aws: Making the Cloudwatch Event Rule Target `target_id` optional [GH-5787]
+ * provider/aws: Timeouts for `elasticsearch_domain` are increased [GH-5910]
+ * provider/aws: `aws_redshift_cluster` allows usernames with underscore in it [GH-5935]
+ * provider/aws: Add support for Step Scaling in `aws_autoscaling_policy` [GH-4277]
+ * provider/aws: Add support for `cname_prefix` to `aws_elastic_beanstalk_environment` resource [GH-5966]
+ * provider/aws: Adds `wait_for_ready_timeout` option to `aws_elastic_beanstalk_environment` [GH-5967]
+ * provider/aws: Adding outputs for elastic_beanstalk_environment resource [GH-5915]
  * provider/clc: Override default `account` alias in provider config [GH-5785]
+ * provider/datadog: Add heredoc support to message, escalation_message, and query [GH-5788]
 
 BUG FIXES:
 
- * provider/aws: Report better error message in `aws_route53_record` when `set_identifier` is required [GH-5777]
+ * provider/aws: Convert protocols to standard format for Security Groups [GH-5881]
  * provider/aws: Fix `aws_route panic` when destination CIDR block is nil [GH-5781]
  * provider/aws: Fix issue with changing iops when also changing storage type to io1 on RDS [GH-5676]
+ * provider/aws: Fix potential crash when receiving malformed `aws_route` API responses [GH-5867]
  * provider/aws: Guard against empty responses from Lambda Permissions [GH-5838]
+ * provider/aws: Normalize and compact SQS Redrive, Policy JSON [GH-5888]
+ * provider/aws: Report better error message in `aws_route53_record` when `set_identifier` is required [GH-5777]
+ * provider/aws: Fix issue re-creating deleted VPC peering connections [GH-5959]
+ * provider/aws: set ASG `health_check_grace_period` default to 300 [GH-5830]
+ * provider/azurerm: Fix detection of `azurerm_storage_account` resources removed manually [GH-5878]
+ * provider/docker: Docker Image will be deleted on destroy [GH-5801]
 
 ## 0.6.14 (March 21, 2016)
 
