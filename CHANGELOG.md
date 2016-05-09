@@ -1,17 +1,82 @@
 ## 0.6.16 (Unreleased)
 
+BACKWARDS INCOMPATIBILITIES / NOTES:
+
+ * provider/aws: `aws_eip` field `private_ip` is now a computed value, and cannot be set in your configuration. 
+    Use `associate_with_private_ip` instead. See [GH-6521]
+
 FEATURES:
 
+ * **New provider:** `librato` [GH-3371]
+ * **New provider:** `softlayer` [GH-4327]
+ * **New resource:** `aws_api_gateway_account` [GH-6321]
  * **New resource:** `aws_api_gateway_authorizer` [GH-6320]
+ * **New resource:** `aws_db_event_subscription` [GH-6367]
+ * **New resource:** `aws_db_option_group` [GH-4401]
+ * **New resource:** `aws_eip_association` [GH-6552]
+ * **New resource:** `openstack_networking_secgroup_rule_v2` [GH-6410] 
+ * **New resource:** `openstack_networking_secgroup_v2` [GH-6410]
+ * **New resource:** `vsphere_file` [GH-6401]
 
 IMPROVEMENTS:
 
+ * core: update HCL dependency to improve whitespace handling in `terraform fmt` [GH-6347]
+ * provider/aws: Add agent_version argument to `aws_opswork_stack` [GH-6493] 
+ * provider/aws: Add support for request parameters to `api_gateway_method` & `api_gateway_integration` [GH-6501]
+ * provider/aws: Add support for response parameters to `api_gateway_method_response` & `api_gateway_integration_response` [GH-6344]
+ * provider/aws: Allow empty S3 config in Cloudfront Origin [GH-6487]
+ * provider/aws: Improve error handling in IAM Server Certificates [GH-6442]
+ * provider/aws: Use `sts:GetCallerIdentity` as additional method for getting AWS account ID [GH-6385]
+ * provider/aws: `aws_redshift_cluster` `automated_snapshot_retention_period` didn't allow 0 value [GH-6537]
+ * provider/aws: Add CloudFront `hosted_zone_id` attribute [GH-6530]
  * provider/azurerm: Increase timeout for ARM Template deployments to 40 minutes [GH-6319]
+ * provider/azurerm: Make `private_ip_address` an exported field on `azurerm_network_interface` [GH-6538]
+ * provider/azurerm: Add support for `tags` to `azurerm_virtual_machine` [GH-6556]
+ * provider/azurerm: Add `os_type` and `image_uri` in `azurerm_virtual_machine` [GH-6553]
+ * provider/cloudflare: Add proxied option to `cloudflare_record` [GH-5508]
+ * provider/docker: Add ability to keep docker image locally on terraform destroy [GH-6376]
+ * provider/fastly: Add S3 Log Streaming to Fastly Service [GH-6378]
+ * provider/fastly: Add Conditions to Fastly Service [GH-6481]
+ * provider/github: Add support for Github Enterprise via base_url configuration option [GH-6434]
+ * provider/triton: Add support for specifying network interfaces on `triton machine` resources [GH-6418]
+ * provider/triton: Deleted firewall rules no longer prevent refresh [GH-6529]
+ * provider/vsphere: Add `skip_customization` option to `vsphere_virtual_machine` resources [GH-6355]
+ * provider/vsphere: Add ability to specify and mount bootable vmdk in `vsphere_virtual_machine` [GH-6146]
+ * provider/vsphere: Add support for IPV6 to `vsphere_virtual_machine` [GH-6457]
  * provider/vsphere: Add support for `memory_reservation` to `vsphere_virtual_machine` [GH-6036]
+ * provider/vsphere: Checking for empty diskPath in `vsphere_virtual_machine` before creating [GH-6400]
+ * provider/vsphere: Support updates to vcpu and memory on `vsphere_virtual_machine` [GH-6356]
+ * remote/s3: Logic for loading credentials now follows the same [conventions as AWS provider](https://www.terraform.io/docs/providers/aws/index.html#authentication) which means it also supports EC2 role auth and session token (e.g. assumed IAM Roles) [GH-5270]
 
 BUG FIXES:
 
+ * core: Boolean values in diffs are normalized to `true` and `false`, eliminating some erroneous diffs [GH-6499]
+ * core: Fix a bug causing "attribute not found" messages during destroy [GH-6557]
+ * provider/aws: Allow account ID checks on EC2 instances & w/ federated accounts [GH-5030]
+ * provider/aws: Fix an eventually consistent issue aws_security_group_rule and possible duplications [GH-6325]
+ * provider/aws: Fix bug where `aws_elastic_beanstalk_environment` ignored `wait_for_ready_timeout` [GH-6358]
+ * provider/aws: Fix bug where `aws_elastic_beanstalk_environment` update config template didn't work [GH-6342]
+ * provider/aws: Fix issue in updating CloudFront distribution LoggingConfig [GH-6407]
+ * provider/aws: Fix issue in upgrading AutoScaling Policy to use `min_adjustment_magnitude` [GH-6440]
+ * provider/aws: Fix issue replacing Network ACL Relationship [GH-6421]
  * provider/aws: Fix issue with KMS Alias keys and name prefixes [GH-6328]
+ * provider/aws: Fix issue with encrypted snapshots of block devices in `aws_launch_configuration` resources [GH-6452]
+ * provider/aws: Fix read of `aws_cloudwatch_log_group` after an update is applied [GH-6384]
+ * provider/aws: Fix updating `number_of_nodes` on `aws_redshift_cluster` [GH-6333]
+ * provider/aws: Omit `aws_cloudfront_distribution` custom_error fields when not explicitly set [GH-6382]
+ * provider/aws: Refresh state on `aws_sqs_queue` not found [GH-6381]
+ * provider/aws: Respect `selection_pattern` in `aws_api_gateway_integration_response` (previously ignored field) [GH-5893]
+ * provider/aws: `aws_cloudfront_distribution` resources now require the `cookies` argument [GH-6505]
+ * provider/aws: `aws_route` crash when used with `aws_vpc_endpoint` [GH-6338]
+ * provider/aws: validate `cluster_id` length for `aws_elasticache_cluster` [GH-6330]
+ * provider/azurerm: `ssh_keys` can now be set for `azurerm_virtual_machine` resources, allowing provisioning [GH-6541]
+ * provider/azurerm: Fix issue that updating `azurerm_virtual_machine` was failing due to empty adminPassword [GH-6528]
+ * provider/azurerm: `storage_data_disk` settings now work correctly on `azurerm_virtual_machine` resources [GH-6543]
+ * provider/cloudflare: can manage apex records [GH-6449]
+ * provider/cloudflare: won't refresh with incorrect record if names match [GH-6449]
+ * provider/datadog: `notify_no_data` and `no_data_timeframe` are set correctly for `datadog_monitor` resources [GH-6509]
+ * provider/docker: Fix crash when using empty string in the `command` list in `docker_container` resources [GH-6424]
+ * provider/vsphere: Memory reservations are now set correctly in `vsphere_virtual_machine` resources [GH-6482]
 
 ## 0.6.15 (April 22, 2016)
 
